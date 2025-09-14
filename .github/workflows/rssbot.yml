@@ -1,0 +1,41 @@
+# 钉钉 rss 推送机器人
+name: DingDingRssBot
+
+on:
+  # 暂停周期性运行，用户可自行取消注释并修改cron表达式恢复
+  # schedule:
+  #   - cron: '0 0/1 * * *'
+  # 可手动触发工作流
+  workflow_dispatch:
+    
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 'Checkout codes'
+      uses: actions/checkout@v4  # 更新到最新版本
+    - name: Set up Python Version
+      uses: actions/setup-python@v5  # 更新到最新版本
+      with:
+        python-version: '3.12'  # 更新到较新的Python版本
+    - name: Install dependencies
+      run: |
+        pip install feedparser dingtalkchatbot
+    - name: send rss
+      env:
+        DD_WEBHOOK: ${{ secrets.DD_WEBHOOK }}
+        DD_SECRET: ${{ secrets.DD_SECRET }}
+      run: |
+        python rss_robot.py
+    - name: Commit
+      run: |
+        git config --global user.email "你的GitHub邮箱@example.com"
+        git config --global user.name "你的GitHub用户名"
+        git add .
+        git commit -m "update sent articles history" -a || echo "No changes to commit"
+    - name: Push changes
+      uses: ad-m/github-push-action@v0.8.5  # 使用具体版本号而非master
+      with:
+        branch: main
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    
